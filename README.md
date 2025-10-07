@@ -85,6 +85,6 @@ You are free to use, modify, and distribute the code for educational or research
 ---
 
 ## 👨‍💻 Author  
-**Dr. Opeyemi “Jaju” Ojajuni**  
-Research Scientist | AI & XR Learning Innovation | Southern University  
+**Dr. Opeyemi “JajuPeter” Ojajuni**  
+Applied Scientist | AI & XR Learning Innovation | Southern University  
 🔗 [GitHub Repository](https://github.com/jajupeter/insightBot)  
