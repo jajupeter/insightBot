@@ -64,26 +64,25 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-openai_api_key = st.sidebar.text_input('OpenAI API Key')
 # ==========================================================
-# 🔑 LOAD OPENAI API KEY (FROM STREAMLIT SECRETS OR .ENV)
+# 🔑 LOAD API KEY (SECURELY)
 # ==========================================================
-#load_dotenv()  # Load local .env if available
+# Load from .env (local dev)
+load_dotenv()
 
-# First, try Streamlit secrets (Cloud deployment)
-#openai_api_key = st.secrets.get("OPENAI_API_KEY") if "OPENAI_API_KEY" in st.secrets else None
+# Check Streamlit Secrets first (for Streamlit Cloud)
+if "OPENAI_API_KEY" in st.secrets:
+    openai_api_key = st.secrets["OPENAI_API_KEY"]
+else:
+    # Otherwise ask user manually
+    openai_api_key = st.sidebar.text_input('🔑 OpenAI API Key', type='password')
 
-# Fallback to environment variable (.env or local)
-#if not openai_api_key:
-    #openai_api_key = os.getenv("OPENAI_API_KEY")
-
-# Stop app if key is missing
-#if not openai_api_key:
-   # st.error("❌ Missing OpenAI API key. Please add it in Streamlit Secrets or your .env file.")
-    #st.stop()
-
-# Set environment variable
-#os.environ["OPENAI_API_KEY"] = openai_api_key
+# Validate and store key
+if openai_api_key:
+    os.environ["OPENAI_API_KEY"] = openai_api_key
+else:
+    st.sidebar.warning("⚠️ Please enter your OpenAI API Key or set it in Streamlit Secrets.")
+    st.stop()
 
 # ==========================================================
 # 🧠 APP HEADER & DESCRIPTION
@@ -99,10 +98,10 @@ st.markdown(
     Simply share up to three article URLs, and InsightBot will:
     <ul>
         <li>Read, analyze, and extract key insights from each article in seconds 🧠</li>
-        <li>Map connections and uncover deeper meaning using advanced AI embeddings ⚙️ </li>
+        <li>Map connections and uncover deeper meaning using advanced AI embeddings ⚙️</li>
         <li>Deliver clear, concise answers backed by verified sources and intelligent reasoning 🔍</li>
     </ul>
-    Whether you’re conducting academic research, analyzing market trends, or just staying ahead of the news cycle — InsightBot turns data into knowledge and knowledge into action ⚡ 
+    Whether you’re conducting academic research, analyzing market trends, or just staying ahead of the news cycle — InsightBot turns data into knowledge and knowledge into action ⚡
     </p>
     </div>
     """,
@@ -193,7 +192,7 @@ st.markdown(
     """
     <hr>
     <div style="text-align:center; color:gray;">
-    Built with using <b>LangChain</b> and <b>Streamlit</b> | Designed by <b>Opeyemi Ojajuni</b>
+    Built with ❤️ using <b>LangChain</b> and <b>Streamlit</b> | Designed by <b>Opeyemi Ojajuni</b>
 
     <hr>
     <p style='text-align: center; color: gray;'>
