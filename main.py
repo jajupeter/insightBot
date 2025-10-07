@@ -8,13 +8,16 @@ import os
 import time
 import streamlit as st
 from dotenv import load_dotenv
-from langchain import OpenAI
+#from langchain import OpenAI
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import UnstructuredURLLoader
-from langchain.embeddings import OpenAIEmbeddings
+#from langchain.document_loaders import UnstructuredURLLoader
+#from langchain.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS  # ✅ FAISS for local vector storage
 
+from langchain_community.llms import OpenAI
+from langchain_community.document_loaders import UnstructuredURLLoader
+from langchain_openai import OpenAIEmbeddings
 # ==========================================================
 # 🎨 PAGE CONFIGURATION
 # ==========================================================
