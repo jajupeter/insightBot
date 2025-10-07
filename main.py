@@ -199,13 +199,13 @@ st.markdown(
     """
     <hr>
     <div style="text-align:center; color:gray;">
-    Built with ❤️ using <b>LangChain</b> and <b>Streamlit</b> | Designed by <b>Opeyemi Ojajuni</b>
+    Built with using <b>LangChain</b> and <b>Streamlit</b> | Designed by <b>Opeyemi Ojajuni</b>
 
     <hr>
     <p style='text-align: center; color: gray;'>
-        🔗 <a href="https://github.com/jajupeter/House-Price-prediction-app" target="_blank">View Source Code on GitHub</a>
+        🔗 <a href="https://github.com/jajupeter/insightBot" target="_blank">View Source Code on GitHub</a>
     </p>
-    
+
     </div>
     """,
     unsafe_allow_html=True,
