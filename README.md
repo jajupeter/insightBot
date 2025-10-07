@@ -1,4 +1,4 @@
-# 📈 InsightBot: News Research Tool  
+# 📈 InsightBot: Research Tool  
 **Streamlit • Python • LangChain • OpenAI API**  
 
 ---
