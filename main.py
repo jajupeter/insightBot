@@ -18,6 +18,10 @@ from langchain_community.vectorstores import FAISS  # ✅ FAISS for local vector
 from langchain_community.llms import OpenAI
 from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain_openai import OpenAIEmbeddings
+
+import nltk
+nltk.download('punkt', quiet=True)
+nltk.download('punkt_tab', quiet=True)
 # ==========================================================
 # 🎨 PAGE CONFIGURATION
 # ==========================================================
