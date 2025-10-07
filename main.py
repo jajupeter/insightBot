@@ -193,7 +193,7 @@ st.markdown(
     """
     <hr>
     <div style="text-align:center; color:gray;">
-    Built with ❤️ using <b>LangChain</b> and <b>Streamlit</b> | Designed by <b>Opeyemi Ojajuni</b>
+    Built with using <b>LangChain</b> and <b>Streamlit</b> | Designed by <b>Opeyemi Ojajuni</b>
 
     <hr>
     <p style='text-align: center; color: gray;'>
