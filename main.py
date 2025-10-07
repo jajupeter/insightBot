@@ -8,20 +8,20 @@ import os
 import time
 import streamlit as st
 from dotenv import load_dotenv
-#from langchain import OpenAI
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-#from langchain.document_loaders import UnstructuredURLLoader
-#from langchain.embeddings import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS  # ✅ FAISS for local vector storage
-
+from langchain_community.vectorstores import FAISS
 from langchain_community.llms import OpenAI
 from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain_openai import OpenAIEmbeddings
-
 import nltk
+
+# ==========================================================
+# 📚 DOWNLOAD NLTK RESOURCES
+# ==========================================================
 nltk.download('punkt', quiet=True)
 nltk.download('punkt_tab', quiet=True)
+
 # ==========================================================
 # 🎨 PAGE CONFIGURATION
 # ==========================================================
@@ -74,17 +74,12 @@ st.markdown(
 # ==========================================================
 # 🔑 LOAD API KEY (SECURELY)
 # ==========================================================
-# Load from .env (local dev)
 load_dotenv()
-
-# Check Streamlit Secrets first (for Streamlit Cloud)
 if "OPENAI_API_KEY" in st.secrets:
     openai_api_key = st.secrets["OPENAI_API_KEY"]
 else:
-    # Otherwise ask user manually
     openai_api_key = st.sidebar.text_input('🔑 OpenAI API Key', type='password')
 
-# Validate and store key
 if openai_api_key:
     os.environ["OPENAI_API_KEY"] = openai_api_key
 else:
@@ -95,7 +90,6 @@ else:
 # 🧠 APP HEADER & DESCRIPTION
 # ==========================================================
 st.title("📈 InsightBot: Research Tool")
-
 st.markdown(
     """
     <div class="description">
@@ -142,55 +136,97 @@ if process_url_clicked:
         st.warning("⚠️ Please enter at least one valid URL.")
     else:
         with st.spinner("🔍 Fetching and processing data... Please wait."):
-            loader = UnstructuredURLLoader(urls=urls)
-            data = loader.load()
+            try:
+                # 🟢 1️⃣ Load Data
+                main_placeholder.text("📥 Data Loading... Started... ⏳")
+                loader = UnstructuredURLLoader(urls=urls)
+                data = loader.load()
+                main_placeholder.text("📥 Data Loading... Completed ✅✅✅")
 
-            text_splitter = RecursiveCharacterTextSplitter(
-                separators=['\n\n', '\n', '.', ','],
-                chunk_size=1000
-            )
-            docs = text_splitter.split_documents(data)
+                if not data:
+                    st.error("❌ No data found. Please ensure the URLs are valid and publicly accessible.")
+                    st.stop()
 
-            embeddings = OpenAIEmbeddings()
-            vectorstore_openai = FAISS.from_documents(docs, embeddings)
-            time.sleep(1.5)
+                # 🟢 2️⃣ Split Data
+                main_placeholder.text("✂️ Text Splitting... Started... ⏳")
+                text_splitter = RecursiveCharacterTextSplitter(
+                    separators=['\n\n', '\n', '.', ','],
+                    chunk_size=1000
+                )
+                docs = text_splitter.split_documents(data)
+                main_placeholder.text(f"✂️ Text Splitting... Completed ✅✅✅ — {len(docs)} chunks created")
 
-            vectorstore_openai.save_local(index_path)
-            st.success("✅ Articles processed and stored successfully!")
+                if not docs:
+                    st.error("❌ Text splitting produced no chunks. Check if the articles contain readable content.")
+                    st.stop()
+
+                # 🟢 3️⃣ Create Embeddings
+                main_placeholder.text("🧠 Building Embedding Vectors... Started... ⏳")
+                embeddings = OpenAIEmbeddings()
+                vectorstore_openai = FAISS.from_documents(docs, embeddings)
+                main_placeholder.text("🧠 Building Embedding Vectors... Completed ✅✅✅")
+
+                # 🟢 4️⃣ Save FAISS Index
+                main_placeholder.text("💾 Saving FAISS Index... ⏳")
+                vectorstore_openai.save_local(index_path)
+                main_placeholder.text("💾 FAISS Index Saved Successfully ✅✅✅")
+
+                st.success("✅ Articles processed and stored successfully! You can now ask InsightBot questions below 👇")
+
+            except Exception as e:
+                st.error(f"⚠️ An error occurred during processing: {e}")
 
 # ==========================================================
 # 💬 QUERY SECTION
 # ==========================================================
 query = st.text_input("🔎 Ask a question about the articles:")
+
 if query:
     if not os.path.exists(index_path):
         st.error("❌ No FAISS index found. Please process URLs first.")
     else:
-        with st.spinner("🤔 Thinking..."):
+        try:
+            query_placeholder = st.empty()
+
+            # 🟢 1️⃣ Load FAISS Index
+            query_placeholder.text("📚 Loading FAISS Index... ⏳")
             embeddings = OpenAIEmbeddings()
             vectorstore = FAISS.load_local(
                 index_path,
                 embeddings,
                 allow_dangerous_deserialization=True
             )
+            query_placeholder.text("📚 FAISS Index Loaded ✅✅✅")
+
+            # 🟢 2️⃣ Initialize LLM
+            query_placeholder.text("🤖 Initializing AI Model... ⏳")
             llm = OpenAI(temperature=0.7, max_tokens=500)
+            query_placeholder.text("🤖 AI Model Ready ✅✅✅")
+
+            # 🟢 3️⃣ Run Retrieval + QA Chain
+            query_placeholder.text("🔍 Retrieving relevant documents... ⏳")
             chain = RetrievalQAWithSourcesChain.from_llm(
                 llm=llm,
                 retriever=vectorstore.as_retriever()
             )
             result = chain({"question": query}, return_only_outputs=True)
-        st.success("✅ Done!")
+            query_placeholder.text("🧩 Generating AI Answer... ✅✅✅")
 
-        st.header("📘 Answer")
-        st.write(result["answer"])
+            # 🟢 4️⃣ Display Answer
+            st.success("✅ Done!")
+            st.header("📘 Answer")
+            st.write(result["answer"])
 
-        sources = result.get("sources", "")
-        if sources:
-            source_links = list({s.strip().strip(',') for s in sources.split() if s.startswith("http")})
-            if source_links:
-                st.subheader("🔗 Sources:")
-                for link in source_links[:3]:
-                    st.markdown(f"🔹 [{link}]({link})")
+            sources = result.get("sources", "")
+            if sources:
+                source_links = list({s.strip().strip(',') for s in sources.split() if s.startswith("http")})
+                if source_links:
+                    st.subheader("🔗 Sources:")
+                    for link in source_links[:3]:
+                        st.markdown(f"🔹 [{link}]({link})")
+
+        except Exception as e:
+            st.error(f"⚠️ An error occurred while answering your query: {e}")
 
 # ==========================================================
 # 🦶 FOOTER
