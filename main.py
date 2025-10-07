@@ -71,15 +71,15 @@ st.markdown(
 # 🔑 API KEY INPUT
 # ==========================================================
 
-st.sidebar.title("⚙️ Settings")
+#st.sidebar.title("⚙️ Settings")
 
-with st.sidebar.expander("🔑 OpenAI API Key (Optional)", expanded=False):
-    user_api_key = st.text_input("Enter your OpenAI API Key:", type="password")
-    if user_api_key:
-        os.environ["OPENAI_API_KEY"] = user_api_key
-        st.success("✅ API key loaded successfully!")
-    else:
-        st.warning("⚠️ Enter your OpenAI API key to enable full functionality.")
+#with st.sidebar.expander("🔑 OpenAI API Key (Optional)", expanded=False):
+    #user_api_key = st.text_input("Enter your OpenAI API Key:", type="password")
+    #if user_api_key:
+        #os.environ["OPENAI_API_KEY"] = user_api_key
+       # st.success("✅ API key loaded successfully!")
+    #else:
+        #st.warning("⚠️ Enter your OpenAI API key to enable full functionality.")
 
 # Load environment variables if any
 load_dotenv()
@@ -126,87 +126,3 @@ process_url_clicked = st.sidebar.button("Process URLs")
 # ==========================================================
 index_path = "faiss_index"
 
-# ==========================================================
-# 🧠 MAIN LOGIC
-# ==========================================================
-main_placeholder = st.empty()
-
-if process_url_clicked:
-    if not urls:
-        st.warning("⚠️ Please enter at least one valid URL.")
-    else:
-        with st.spinner("🔍 Fetching and processing data... Please wait."):
-            loader = UnstructuredURLLoader(urls=urls)
-            data = loader.load()
-
-            text_splitter = RecursiveCharacterTextSplitter(
-                separators=['\n\n', '\n', '.', ','],
-                chunk_size=1000
-            )
-            docs = text_splitter.split_documents(data)
-
-            embeddings = OpenAIEmbeddings()
-            vectorstore_openai = FAISS.from_documents(docs, embeddings)
-            #vectorstore_openai = Chroma.from_documents(docs, embeddings, persist_directory=index_path)
-            time.sleep(1.5)
-
-            # ✅ Save FAISS index safely (no pickle)
-            vectorstore_openai.save_local(index_path)
-            #vectorstore_openai.persist()
-            st.success("✅ Articles processed and stored successfully!")
-
-# ==========================================================
-# 💬 QUERY SECTION
-# ==========================================================
-query = st.text_input("🔎 Ask a question about the articles:")
-if query:
-    if not os.path.exists(index_path):
-        st.error("❌ No FAISS index found. Please process URLs first.")
-    else:
-        with st.spinner("🤔 Thinking..."):
-            embeddings = OpenAIEmbeddings()
-            #vectorstore = Chroma(persist_directory=index_path, embedding_function=embeddings)
-            vectorstore = FAISS.load_local(
-                index_path,
-                embeddings,
-                allow_dangerous_deserialization=True
-            )
-            llm = OpenAI(temperature=0.7, max_tokens=500)
-            chain = RetrievalQAWithSourcesChain.from_llm(
-                llm=llm,
-                retriever=vectorstore.as_retriever()
-            )
-            result = chain({"question": query}, return_only_outputs=True)
-        st.success("✅ Done!")
-
-        st.header("📘 Answer")
-        st.write(result["answer"])
-
-        sources = result.get("sources", "")
-        if sources:
-            # Split and deduplicate
-            source_links = list({s.strip().strip(',') for s in sources.split() if s.startswith("http")})
-            if source_links:
-                st.subheader("🔗 Sources:")
-                for link in source_links[:3]:  # optional: limit to top 3
-                    st.markdown(f"🔹 [{link}]({link})")
-
-
-# ==========================================================
-# 🦶 FOOTER
-# ==========================================================
-st.markdown(
-    """
-    <hr>
-    <div style="text-align:center; color:gray;">
-    Built with using <b>LangChain</b> and <b>Streamlit</b> | Designed by <b>Opeyemi Ojajuni</b>
-
-    <hr>
-    <p style='text-align: center; color: gray;'>
-        🔗 <a href="https://github.com/jajupeter/insightBot" target="_blank">View Source Code on GitHub</a>
-    </p>
-
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
