@@ -64,25 +64,26 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+openai_api_key = st.sidebar.text_input('OpenAI API Key')
 # ==========================================================
 # 🔑 LOAD OPENAI API KEY (FROM STREAMLIT SECRETS OR .ENV)
 # ==========================================================
-load_dotenv()  # Load local .env if available
+#load_dotenv()  # Load local .env if available
 
 # First, try Streamlit secrets (Cloud deployment)
-openai_api_key = st.secrets.get("OPENAI_API_KEY") if "OPENAI_API_KEY" in st.secrets else None
+#openai_api_key = st.secrets.get("OPENAI_API_KEY") if "OPENAI_API_KEY" in st.secrets else None
 
 # Fallback to environment variable (.env or local)
-if not openai_api_key:
-    openai_api_key = os.getenv("OPENAI_API_KEY")
+#if not openai_api_key:
+    #openai_api_key = os.getenv("OPENAI_API_KEY")
 
 # Stop app if key is missing
-if not openai_api_key:
-    st.error("❌ Missing OpenAI API key. Please add it in Streamlit Secrets or your .env file.")
-    st.stop()
+#if not openai_api_key:
+   # st.error("❌ Missing OpenAI API key. Please add it in Streamlit Secrets or your .env file.")
+    #st.stop()
 
 # Set environment variable
-os.environ["OPENAI_API_KEY"] = openai_api_key
+#os.environ["OPENAI_API_KEY"] = openai_api_key
 
 # ==========================================================
 # 🧠 APP HEADER & DESCRIPTION
