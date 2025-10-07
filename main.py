@@ -22,7 +22,7 @@ from langchain_community.vectorstores import FAISS  # ✅ Use langchain_communit
 # 🎨 PAGE CONFIGURATION
 # ==========================================================
 st.set_page_config(
-    page_title="InsightBot: News Research Tool",
+    page_title="InsightBot: Research Tool",
     page_icon="📈",
     layout="wide",
 )
@@ -87,7 +87,7 @@ load_dotenv()
 # ==========================================================
 # 🧠 APP HEADER & DESCRIPTION
 # ==========================================================
-st.title("📈 InsightBot: News Research Tool")
+st.title("📈 InsightBot: Research Tool")
 
 st.markdown(
     """
