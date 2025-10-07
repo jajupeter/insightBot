@@ -68,22 +68,20 @@ st.markdown(
 )
 
 # ==========================================================
-# 🔑 API KEY INPUT
+# 🔑 take environment variables from .env (especially openai api key)
 # ==========================================================
-
-#st.sidebar.title("⚙️ Settings")
-
-#with st.sidebar.expander("🔑 OpenAI API Key (Optional)", expanded=False):
-    #user_api_key = st.text_input("Enter your OpenAI API Key:", type="password")
-    #if user_api_key:
-        #os.environ["OPENAI_API_KEY"] = user_api_key
-       # st.success("✅ API key loaded successfully!")
-    #else:
-        #st.warning("⚠️ Enter your OpenAI API key to enable full functionality.")
-
 # Load environment variables if any
 load_dotenv()
+openai_api_key = (
+    st.secrets.get("OPENAI_API_KEY") or 
+    os.getenv("OPENAI_API_KEY")
+)
 
+if not openai_api_key:
+    st.error("❌ Missing OpenAI API key. Please add it in Streamlit Secrets or .env file.")
+    st.stop()
+
+os.environ["OPENAI_API_KEY"] = openai_api_key
 # ==========================================================
 # 🧠 APP HEADER & DESCRIPTION
 # ==========================================================
