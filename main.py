@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on 06 Oct 2025 
+Created on 06 Oct 2025
 @author: Jaju Peter
 """
-
-
 
 import os
 import time
@@ -15,8 +13,7 @@ from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import UnstructuredURLLoader
 from langchain.embeddings import OpenAIEmbeddings
-#from langchain_community.vectorstores import Chroma
-from langchain_community.vectorstores import FAISS  # ✅ Use langchain_community for FAISS
+from langchain_community.vectorstores import FAISS  # ✅ FAISS for local vector storage
 
 # ==========================================================
 # 🎨 PAGE CONFIGURATION
@@ -68,20 +65,25 @@ st.markdown(
 )
 
 # ==========================================================
-# 🔑 take environment variables from .env (especially openai api key)
+# 🔑 LOAD OPENAI API KEY (FROM STREAMLIT SECRETS OR .ENV)
 # ==========================================================
-# Load environment variables if any
-load_dotenv()
-openai_api_key = (
-    st.secrets.get("OPENAI_API_KEY") or 
-    os.getenv("OPENAI_API_KEY")
-)
+load_dotenv()  # Load local .env if available
 
+# First, try Streamlit secrets (Cloud deployment)
+openai_api_key = st.secrets.get("OPENAI_API_KEY") if "OPENAI_API_KEY" in st.secrets else None
+
+# Fallback to environment variable (.env or local)
 if not openai_api_key:
-    st.error("❌ Missing OpenAI API key. Please add it in Streamlit Secrets or .env file.")
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+
+# Stop app if key is missing
+if not openai_api_key:
+    st.error("❌ Missing OpenAI API key. Please add it in Streamlit Secrets or your .env file.")
     st.stop()
 
+# Set environment variable
 os.environ["OPENAI_API_KEY"] = openai_api_key
+
 # ==========================================================
 # 🧠 APP HEADER & DESCRIPTION
 # ==========================================================
@@ -98,9 +100,8 @@ st.markdown(
         <li>Read, analyze, and extract key insights from each article in seconds 🧠</li>
         <li>Map connections and uncover deeper meaning using advanced AI embeddings ⚙️ </li>
         <li>Deliver clear, concise answers backed by verified sources and intelligent reasoning 🔍</li>
-
-       Whether you’re conducting academic research, analyzing market trends, or just staying ahead of the news cycle — InsightBot turns data into knowledge and knowledge into action ⚡ 
     </ul>
+    Whether you’re conducting academic research, analyzing market trends, or just staying ahead of the news cycle — InsightBot turns data into knowledge and knowledge into action ⚡ 
     </p>
     </div>
     """,
@@ -145,12 +146,9 @@ if process_url_clicked:
 
             embeddings = OpenAIEmbeddings()
             vectorstore_openai = FAISS.from_documents(docs, embeddings)
-            #vectorstore_openai = Chroma.from_documents(docs, embeddings, persist_directory=index_path)
             time.sleep(1.5)
 
-            # ✅ Save FAISS index safely (no pickle)
             vectorstore_openai.save_local(index_path)
-            #vectorstore_openai.persist()
             st.success("✅ Articles processed and stored successfully!")
 
 # ==========================================================
@@ -163,7 +161,6 @@ if query:
     else:
         with st.spinner("🤔 Thinking..."):
             embeddings = OpenAIEmbeddings()
-            #vectorstore = Chroma(persist_directory=index_path, embedding_function=embeddings)
             vectorstore = FAISS.load_local(
                 index_path,
                 embeddings,
@@ -182,13 +179,11 @@ if query:
 
         sources = result.get("sources", "")
         if sources:
-            # Split and deduplicate
             source_links = list({s.strip().strip(',') for s in sources.split() if s.startswith("http")})
             if source_links:
                 st.subheader("🔗 Sources:")
-                for link in source_links[:3]:  # optional: limit to top 3
+                for link in source_links[:3]:
                     st.markdown(f"🔹 [{link}]({link})")
-
 
 # ==========================================================
 # 🦶 FOOTER
@@ -197,13 +192,12 @@ st.markdown(
     """
     <hr>
     <div style="text-align:center; color:gray;">
-    Built with using <b>LangChain</b> and <b>Streamlit</b> | Designed by <b>Opeyemi Ojajuni</b>
+    Built with ❤️ using <b>LangChain</b> and <b>Streamlit</b> | Designed by <b>Opeyemi Ojajuni</b>
 
     <hr>
     <p style='text-align: center; color: gray;'>
         🔗 <a href="https://github.com/jajupeter/insightBot" target="_blank">View Source Code on GitHub</a>
     </p>
-
     </div>
     """,
     unsafe_allow_html=True,
