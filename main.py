@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on 06 Oct 2025
-@author: Jaju Peter
+Author: Jaju Peter
 """
 
 import os
@@ -11,16 +11,15 @@ from dotenv import load_dotenv
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_community.llms import OpenAI
-from langchain_community.document_loaders import UnstructuredURLLoader
-from langchain_openai import OpenAIEmbeddings
+from langchain_community.document_loaders import WebBaseLoader
+from langchain_openai import OpenAI, OpenAIEmbeddings
 import nltk
 
 # ==========================================================
 # 📚 DOWNLOAD NLTK RESOURCES
 # ==========================================================
 nltk.download('punkt', quiet=True)
-nltk.download('punkt_tab', quiet=True)
+nltk.download('averaged_perceptron_tagger_eng', quiet=True)
 
 # ==========================================================
 # 🎨 PAGE CONFIGURATION
@@ -32,7 +31,7 @@ st.set_page_config(
 )
 
 # ==========================================================
-# CUSTOM STYLING
+# 💅 CUSTOM STYLING
 # ==========================================================
 st.markdown(
     """
@@ -75,21 +74,23 @@ st.markdown(
 # 🔑 LOAD API KEY (SECURELY)
 # ==========================================================
 load_dotenv()
+
 if "OPENAI_API_KEY" in st.secrets:
     openai_api_key = st.secrets["OPENAI_API_KEY"]
 else:
-    openai_api_key = st.sidebar.text_input('🔑 OpenAI API Key', type='password')
+    openai_api_key = st.sidebar.text_input("🔑 Enter your OpenAI API Key", type="password")
 
 if openai_api_key:
     os.environ["OPENAI_API_KEY"] = openai_api_key
 else:
-    st.sidebar.warning("⚠️ Please enter your OpenAI API Key or set it in Streamlit Secrets.")
+    st.sidebar.warning("⚠️ Please enter your OpenAI API key or set it in Streamlit Secrets.")
     st.stop()
 
 # ==========================================================
 # 🧠 APP HEADER & DESCRIPTION
 # ==========================================================
 st.title("📈 InsightBot: Research Tool")
+
 st.markdown(
     """
     <div class="description">
@@ -127,7 +128,7 @@ process_url_clicked = st.sidebar.button("Process URLs")
 index_path = "faiss_index"
 
 # ==========================================================
-# 🧠 MAIN LOGIC
+# 🧠 MAIN LOGIC WITH PROGRESS DISPLAY
 # ==========================================================
 main_placeholder = st.empty()
 
@@ -139,25 +140,25 @@ if process_url_clicked:
             try:
                 # 🟢 1️⃣ Load Data
                 main_placeholder.text("📥 Data Loading... Started... ⏳")
-                loader = UnstructuredURLLoader(urls=urls)
+                loader = WebBaseLoader(urls)
                 data = loader.load()
                 main_placeholder.text("📥 Data Loading... Completed ✅✅✅")
 
                 if not data:
-                    st.error("❌ No data found. Please ensure the URLs are valid and publicly accessible.")
+                    st.error("❌ No data found. Ensure URLs are publicly accessible and contain text.")
                     st.stop()
 
                 # 🟢 2️⃣ Split Data
                 main_placeholder.text("✂️ Text Splitting... Started... ⏳")
                 text_splitter = RecursiveCharacterTextSplitter(
-                    separators=['\n\n', '\n', '.', ','],
+                    separators=["\n\n", "\n", ".", ","],
                     chunk_size=1000
                 )
                 docs = text_splitter.split_documents(data)
                 main_placeholder.text(f"✂️ Text Splitting... Completed ✅✅✅ — {len(docs)} chunks created")
 
-                if not docs:
-                    st.error("❌ Text splitting produced no chunks. Check if the articles contain readable content.")
+                if not docs or len(docs) == 0:
+                    st.error("❌ No text chunks created. Check if URLs contain readable text.")
                     st.stop()
 
                 # 🟢 3️⃣ Create Embeddings
@@ -177,7 +178,7 @@ if process_url_clicked:
                 st.error(f"⚠️ An error occurred during processing: {e}")
 
 # ==========================================================
-# 💬 QUERY SECTION
+# 💬 QUERY SECTION WITH PROGRESS DISPLAY
 # ==========================================================
 query = st.text_input("🔎 Ask a question about the articles:")
 
@@ -203,14 +204,14 @@ if query:
             llm = OpenAI(temperature=0.7, max_tokens=500)
             query_placeholder.text("🤖 AI Model Ready ✅✅✅")
 
-            # 🟢 3️⃣ Run Retrieval + QA Chain
+            # 🟢 3️⃣ Retrieve and Generate Answer
             query_placeholder.text("🔍 Retrieving relevant documents... ⏳")
             chain = RetrievalQAWithSourcesChain.from_llm(
                 llm=llm,
                 retriever=vectorstore.as_retriever()
             )
             result = chain({"question": query}, return_only_outputs=True)
-            query_placeholder.text("🧩 Generating AI Answer... ✅✅✅")
+            query_placeholder.text("🧩 Generating Answer... ✅✅✅")
 
             # 🟢 4️⃣ Display Answer
             st.success("✅ Done!")
@@ -219,14 +220,12 @@ if query:
 
             sources = result.get("sources", "")
             if sources:
-                source_links = list({s.strip().strip(',') for s in sources.split() if s.startswith("http")})
-                if source_links:
-                    st.subheader("🔗 Sources:")
-                    for link in source_links[:3]:
-                        st.markdown(f"🔹 [{link}]({link})")
+                st.subheader("🔗 Sources:")
+                for link in list({s.strip().strip(',') for s in sources.split() if s.startswith("http")})[:3]:
+                    st.markdown(f"🔹 [{link}]({link})")
 
         except Exception as e:
-            st.error(f"⚠️ An error occurred while answering your query: {e}")
+            st.error(f"⚠️ Error while answering query: {e}")
 
 # ==========================================================
 # 🦶 FOOTER
@@ -236,7 +235,6 @@ st.markdown(
     <hr>
     <div style="text-align:center; color:gray;">
     Built with ❤️ using <b>LangChain</b> and <b>Streamlit</b> | Designed by <b>Opeyemi Ojajuni</b>
-
     <hr>
     <p style='text-align: center; color: gray;'>
         🔗 <a href="https://github.com/jajupeter/insightBot" target="_blank">View Source Code on GitHub</a>
