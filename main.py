@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+Created on 06 Oct 2025 
+@author: Jaju Peter
+"""
+
+
+
 import os
 import time
 import streamlit as st
@@ -192,6 +200,12 @@ st.markdown(
     <hr>
     <div style="text-align:center; color:gray;">
     Built with ❤️ using <b>LangChain</b> and <b>Streamlit</b> | Designed by <b>Opeyemi Ojajuni</b>
+
+    <hr>
+    <p style='text-align: center; color: gray;'>
+        🔗 <a href="https://github.com/jajupeter/House-Price-prediction-app" target="_blank">View Source Code on GitHub</a>
+    </p>
+    
     </div>
     """,
     unsafe_allow_html=True,
